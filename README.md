@@ -8,13 +8,13 @@ Clarity in direction. Precision in detail.
 
 <br>
 
-[![Download v1.6.0](https://img.shields.io/badge/Download-v1.6.0-0A84FF?style=for-the-badge&logo=android&logoColor=white)](https://github.com/MeraniBadreddine/Sajda/releases/download/v1.6.0/app-release.apk)
+[![Download v1.9.0](https://img.shields.io/badge/Download-v1.9.0-0A84FF?style=for-the-badge&logo=android&logoColor=white)](https://github.com/MeraniBadreddine/Sajda/releases/download/v1.9.0/app-release.apk)
 
-[![Version](https://img.shields.io/badge/Version-1.6.0-30D158?style=flat-square)](https://github.com/MeraniBadreddine/Sajda/releases/tag/v1.6.0)
+[![Version](https://img.shields.io/badge/Version-1.9.0-30D158?style=flat-square)](https://github.com/MeraniBadreddine/Sajda/releases/tag/v1.9.0)
 ![Platform](https://img.shields.io/badge/Platform-Android-0A84FF?style=flat-square)
 ![License](https://img.shields.io/badge/Project-Open%20Source-8E8E93?style=flat-square)
 
-**Version 1.6.0** &nbsp;·&nbsp; **Native Android** &nbsp;·&nbsp; **Minimal by Design**
+**Version 1.9.0** &nbsp;·&nbsp; **Native Android** &nbsp;·&nbsp; **Liquid Glass Design**
 
 <br>
 
@@ -26,27 +26,38 @@ Clarity in direction. Precision in detail.
 
 Sajda is a focused Qibla compass designed to make finding the direction of prayer feel simple, clear, and intuitive.
 
-Built around Android's sensor capabilities, Sajda combines a refined compass interface with location-based Qibla direction and sensor confidence feedback. Every element is designed to serve one purpose: helping you understand your direction without unnecessary distractions.
+Built around Android's sensor capabilities, Sajda combines a refined compass interface with location-based Qibla direction and sensor confidence feedback.
+
+Version 1.9.0 introduces a refined Liquid Glass visual language, bringing depth, translucent surfaces, and carefully balanced visual elements to the experience.
 
 *Less visual noise. More clarity. Direction with intention.*
 
 ---
 
+## What's New in v1.9.0
+
+- **Liquid Glass Interface** — Refined translucent surfaces and updated visual components.
+- **Redesigned UI Elements** — Updated cards, banners, pills, circles, and action backgrounds.
+- **Enhanced Visual Consistency** — A more cohesive interface with carefully considered spacing and surfaces.
+- **Updated Compass Experience** — Refined compass presentation and visual details.
+
+---
+
 ## Crafted with Precision
 
-* **A Refined Compass**  
+- **A Refined Compass**  
   A carefully designed compass dial with clear cardinal directions, precise degree markings, and a distinctive Qibla indicator. Smooth motion keeps the interface responsive while preserving visual stability.
 
-* **Sensor Awareness**  
+- **Sensor Awareness**  
   Sajda uses device orientation and magnetic sensor data to determine heading. Sensor confidence is evaluated according to the data actually available, with calibration guidance when accuracy is unknown or insufficient.
 
-* **Location-Based Direction**  
+- **Location-Based Direction**  
   Uses the device's location to determine the Qibla direction. Location data is validated before use, and cached location information is subject to age checks.
 
-* **A Considered Interface**  
-  A minimal visual language with refined typography, balanced spacing, subtle surfaces, and a focused information hierarchy.
+- **Liquid Glass Design**  
+  A refined visual language featuring translucent-inspired surfaces, layered backgrounds, subtle visual depth, and balanced interface elements.
 
-* **A Distinctive App Identity**  
+- **A Distinctive App Identity**  
   A custom adaptive launcher icon, including round and monochrome variants, completes the visual experience across supported Android launchers.
 
 ---
@@ -66,6 +77,7 @@ Built around Android's sensor capabilities, Sajda combines a refined compass int
 | **Location Storage** | Validated coordinates and fix timestamp |
 | **App Icon** | Adaptive, round, and monochrome variants |
 | **Interface** | Arabic, English, and French resources |
+| **Visual Design** | Liquid Glass-inspired interface elements |
 
 ---
 
@@ -74,7 +86,7 @@ Built around Android's sensor capabilities, Sajda combines a refined compass int
 1. **Download**  
    Download the signed Android APK directly from the official GitHub release.
 
-   [Download Sajda v1.6.0](https://github.com/MeraniBadreddine/Sajda/releases/download/v1.6.0/app-release.apk)
+   [Download Sajda v1.9.0](https://github.com/MeraniBadreddine/Sajda/releases/download/v1.9.0/app-release.apk)
 
 2. **Install**  
    Open the downloaded APK and follow the Android installation instructions. You may need to allow installation from your browser or file manager.
@@ -91,11 +103,12 @@ Built around Android's sensor capabilities, Sajda combines a refined compass int
 
 ## Engineering Philosophy
 
-* **Clarity First:** The Qibla direction remains the primary focus.
-* **Honest Feedback:** Sensor confidence reflects available accuracy information rather than assuming reliability.
-* **Purposeful Motion:** Animations are smooth, restrained, and designed to stop when the interface settles.
-* **Minimal Data:** Location storage is limited to the coordinates and timestamp needed by the application.
-* **Native by Design:** Android capabilities are used directly, without unnecessary complexity.
+- **Clarity First:** The Qibla direction remains the primary focus.
+- **Honest Feedback:** Sensor confidence reflects available accuracy information rather than assuming reliability.
+- **Purposeful Motion:** Animations are smooth, restrained, and designed to stop when the interface settles.
+- **Minimal Data:** Location storage is limited to the coordinates and timestamp needed by the application.
+- **Native by Design:** Android capabilities are used directly, without unnecessary complexity.
+- **Visual Restraint:** Liquid Glass-inspired elements enhance the interface without distracting from its purpose.
 
 ---
 
@@ -115,6 +128,9 @@ LocationStore
 
 CompassView
 └── Compass dial, Qibla indicator and animation
+
+LiquidGlass
+└── Refined interface surfaces and visual components
 
 res/
 ├── drawable/
@@ -137,11 +153,15 @@ gradle :app:test :app:assembleDebug
 
 **Debug APK location:**
 
-`app/build/outputs/apk/debug/app-debug.apk`
+```text
+app/build/outputs/apk/debug/app-debug.apk
+```
 
 **Signed Release APK location:**
 
-`app/build/outputs/apk/release/app-release.apk`
+```text
+app/build/outputs/apk/release/app-release.apk
+```
 
 ---
 
@@ -149,24 +169,34 @@ gradle :app:test :app:assembleDebug
 
 | Parameter | Value |
 | :--- | :--- |
-| **Version** | 1.6.0 |
-| **Version Code** | 13 |
+| **Version** | 1.9.0 |
+| **Version Code** | 19 |
 | **Minimum Android** | Android 8.0 (API Level 26) |
 | **Target SDK** | API Level 35 |
 | **Platform** | Android |
 | **Language** | Kotlin |
+| **Build System** | Gradle |
 
 ---
 
 ## Quality and Verification
 
-The v1.6.0 release has successfully passed:
+The v1.9.0 release has successfully passed:
 
-* Android Gradle release build.
-* APK signature verification (APK Signature Scheme v2).
-* Installation and functional testing on a Google Pixel 7.
+- Android Gradle release build.
+- APK signature verification (APK Signature Scheme v2).
+- Release APK upload verification on GitHub.
 
-The source project also successfully passed the Gradle debug build and unit tests.
+The release APK is signed and available through the official GitHub release.
+
+---
+
+## Previous Releases
+
+| Version | Release |
+| :--- | :--- |
+| **v1.9.0** | [Download](https://github.com/MeraniBadreddine/Sajda/releases/tag/v1.9.0) |
+| **v1.6.0** | [Previous Release](https://github.com/MeraniBadreddine/Sajda/releases/tag/v1.6.0) |
 
 ---
 
@@ -174,7 +204,7 @@ The source project also successfully passed the Gradle debug build and unit test
 
 ### Less distraction. Clearer direction.
 
-**Sajda · Android Edition · Version 1.6.0**
+**Sajda · Android Edition · Version 1.9.0**
 
 <sub>An independent open-source project.</sub>
 
