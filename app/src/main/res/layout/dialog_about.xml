@@ -4,10 +4,10 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:background="@drawable/bg_about_card"
-    android:paddingStart="20dp"
-    android:paddingEnd="20dp"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp"
     android:paddingTop="20dp"
-    android:paddingBottom="4dp">
+    android:paddingBottom="0dp">
 
     <TextView
         android:layout_width="match_parent"
@@ -24,17 +24,20 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
+        android:paddingStart="4dp"
+        android:paddingEnd="4dp"
         android:text="@string/about_body"
         android:textColor="@color/label_secondary"
         android:textSize="13sp"
-        android:lineSpacingMultiplier="1.2"
+        android:lineSpacingMultiplier="1.24"
         android:fontFamily="sans-serif"
+        android:gravity="center"
         android:includeFontPadding="false" />
 
     <View
         android:layout_width="match_parent"
         android:layout_height="0.5dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="18dp"
         android:background="#26FFFFFF" />
 
     <TextView

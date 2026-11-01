@@ -3,7 +3,6 @@
     <string name="app_name">Sajda</string>
     <string name="tagline">Direction, with intention.</string>
     <string name="location">Location</string>
-    <string name="source_gps">Device</string>
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
     <string name="open_settings">Settings</string>
@@ -21,12 +20,10 @@
     <string name="conf_low">Interference possible</string>
     <string name="conf_calibrate">Calibration needed</string>
     <string name="calibrate_guidance">Move the phone in a figure-eight, away from metal</string>
-
     <string name="calibrate_banner">Figure-eight · away from metal</string>
     <string name="location_cached">Using last known location</string>
     <string name="location_off_pill">Location is off · Tap to enable</string>
     <string name="location_permission_pill">Allow location · Tap to continue</string>
-
     <string name="heading_approximate">Direction is approximate — hold steady</string>
     <string name="aligned">Aligned with Qibla</string>
     <string name="turn_degrees">Turn %1$d° %2$s</string>

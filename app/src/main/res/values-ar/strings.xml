@@ -29,7 +29,6 @@
 الزاوية المعروضة هي القبلة المحسوبة. مؤشر الثقة يعكس جودة الحساسات فقط.
 
 المعدن يؤثر على البوصلة. الموقع يبقى على جهازك.</string>
-    <string name="source_gps">الجهاز</string>
     <string name="calibrate_banner">شكل 8 · بعيداً عن المعدن</string>
     <string name="location_cached">آخر موقع معروف</string>
     <string name="location_off_pill">الموقع مطفأ · اضغط للتفعيل</string>

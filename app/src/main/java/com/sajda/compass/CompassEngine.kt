@@ -5,14 +5,18 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
-import android.view.Surface
-import android.view.WindowManager
 import com.sajda.geo.DeclinationProvider
 import com.sajda.geo.GeoMath
 import com.sajda.geo.TrueHeading
 import kotlin.math.sqrt
 
-/** Lifecycle-bound compass using Android's fused rotation vector when available. */
+/**
+ * Lifecycle-bound compass using Android's fused rotation vector when available.
+ *
+ * Confidence is derived from whichever sensor actually feeds the heading:
+ * raw magnetometer accuracy for the legacy path, rotation-vector accuracy
+ * when the raw magnetic field is not exposed by the device.
+ */
 class CompassEngine(
     context: Context,
     private val declinationProvider: DeclinationProvider,
@@ -21,11 +25,6 @@ class CompassEngine(
 
     private val appContext = context.applicationContext
     private val sm = appContext.getSystemService(Context.SENSOR_SERVICE) as SensorManager
-    @Suppress("DEPRECATION")
-    private val displayRotation = try {
-        (appContext.getSystemService(Context.WINDOW_SERVICE) as WindowManager).defaultDisplay.rotation
-    } catch (_: Exception) { Surface.ROTATION_0 }
-    private val displayRotationMatrix = FloatArray(9)
     private val rotation = sm.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
     private val accelerometer = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
     private val magnetometer = sm.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)
@@ -38,6 +37,7 @@ class CompassEngine(
     private var hasGravity = false
     private var hasMagneticField = false
     private var magneticAccuracy = SensorManager.SENSOR_STATUS_UNRELIABLE
+    private var rotationVectorAccuracy = -1 // unknown until first accuracy event
     private val filter = HeadingFilter()
 
     @Volatile private var lat = 0.0
@@ -110,10 +110,14 @@ class CompassEngine(
         hasGravity = false
         hasMagneticField = false
         magneticAccuracy = SensorManager.SENSOR_STATUS_UNRELIABLE
+        rotationVectorAccuracy = -1
     }
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
-        if (sensor?.type == Sensor.TYPE_MAGNETIC_FIELD) magneticAccuracy = accuracy
+        when (sensor?.type) {
+            Sensor.TYPE_MAGNETIC_FIELD -> magneticAccuracy = accuracy
+            Sensor.TYPE_ROTATION_VECTOR -> rotationVectorAccuracy = accuracy
+        }
     }
 
     override fun onSensorChanged(event: SensorEvent) {
@@ -121,6 +125,7 @@ class CompassEngine(
             Sensor.TYPE_ROTATION_VECTOR -> {
                 try {
                     if (!isFiniteVector(event.values)) return
+                    if (event.accuracy >= 0) rotationVectorAccuracy = event.accuracy
                     SensorManager.getRotationMatrixFromVector(rotationMatrix, event.values)
                     publishFromRotation(rotationMatrix)
                 } catch (_: RuntimeException) {
@@ -156,19 +161,8 @@ class CompassEngine(
     }
 
     private fun publishFromRotation(matrix: FloatArray) {
-        val remapped = when (displayRotation) {
-            Surface.ROTATION_90 -> SensorManager.remapCoordinateSystem(
-                matrix, SensorManager.AXIS_Y, SensorManager.AXIS_MINUS_X, displayRotationMatrix
-            )
-            Surface.ROTATION_180 -> SensorManager.remapCoordinateSystem(
-                matrix, SensorManager.AXIS_MINUS_X, SensorManager.AXIS_MINUS_Y, displayRotationMatrix
-            )
-            Surface.ROTATION_270 -> SensorManager.remapCoordinateSystem(
-                matrix, SensorManager.AXIS_MINUS_Y, SensorManager.AXIS_X, displayRotationMatrix
-            )
-            else -> false
-        }
-        SensorManager.getOrientation(if (remapped) displayRotationMatrix else matrix, orientation)
+        // Orientation is locked to portrait in the manifest, so no axis remap is needed.
+        SensorManager.getOrientation(matrix, orientation)
         val magnetic = GeoMath.normalizeDegrees(Math.toDegrees(orientation[0].toDouble()))
         if (!magnetic.isFinite()) return
         refreshDeclination()
@@ -179,15 +173,16 @@ class CompassEngine(
         } else Double.NaN
 
         val confidence = if (!declinationAvailable) Confidence.LOW
-            else classify(magneticAccuracy, fieldUt, hasMagneticField)
+            else classify(fieldUt)
         filter.setConfidence(confidence)
         val smoothed = filter.filter(trueHeading)
         val hint = when {
             !declinationAvailable -> "True-north correction unavailable — direction is approximate"
-            !hasMagneticField -> "Magnetic sensor unavailable — direction cannot be verified"
-            magneticAccuracy <= SensorManager.SENSOR_STATUS_UNRELIABLE ->
+            !hasMagneticField && !usingRotationVector ->
+                "Magnetic sensor unavailable — direction cannot be verified"
+            hasMagneticField && magneticAccuracy <= SensorManager.SENSOR_STATUS_UNRELIABLE ->
                 "Compass calibration needed — move the phone in a figure-eight"
-            fieldUt.isFinite() && (fieldUt < 20.0 || fieldUt > 70.0) ->
+            hasMagneticField && fieldUt.isFinite() && (fieldUt < 20.0 || fieldUt > 70.0) ->
                 "Possible magnetic interference — move away from metal or magnets"
             confidence == Confidence.LOW -> "Direction is approximate — hold the phone steady"
             else -> null
@@ -197,17 +192,22 @@ class CompassEngine(
             magneticHeadingDeg = magnetic,
             trueHeadingDeg = smoothed,
             confidence = confidence,
-            accuracyStatus = magneticAccuracy,
+            accuracyStatus = if (hasMagneticField) magneticAccuracy else rotationVectorAccuracy,
             interferenceHint = hint
         ))
     }
 
-    private fun classify(accuracy: Int, fieldUt: Double, hasField: Boolean): Confidence {
-        if (!hasField || !fieldUt.isFinite() || accuracy <= SensorManager.SENSOR_STATUS_UNRELIABLE) {
-            return Confidence.CALIBRATE
-        }
-        // Field magnitude is a warning heuristic, not a geographic accuracy measurement.
-        if (fieldUt < 20.0 || fieldUt > 70.0) return Confidence.LOW
+    /**
+     * Confidence comes from the sensor that actually drives the heading:
+     * raw magnetometer accuracy on the legacy path, rotation-vector accuracy
+     * when the device does not expose the raw magnetic field.
+     */
+    private fun classify(fieldUt: Double): Confidence {
+        val accuracy = if (hasMagneticField) magneticAccuracy else rotationVectorAccuracy
+        if (accuracy < 0) return Confidence.CALIBRATE // unknown — never assume accuracy
+        if (accuracy <= SensorManager.SENSOR_STATUS_UNRELIABLE) return Confidence.CALIBRATE
+        // Field magnitude is a warning heuristic, only meaningful when the raw field is visible.
+        if (hasMagneticField && fieldUt.isFinite() && (fieldUt < 20.0 || fieldUt > 70.0)) return Confidence.LOW
         return when (accuracy) {
             SensorManager.SENSOR_STATUS_ACCURACY_HIGH -> Confidence.HIGH
             SensorManager.SENSOR_STATUS_ACCURACY_MEDIUM -> Confidence.MEDIUM

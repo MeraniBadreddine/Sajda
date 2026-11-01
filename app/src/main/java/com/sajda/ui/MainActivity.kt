@@ -1,5 +1,4 @@
 package com.sajda.ui
-
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Intent
@@ -28,8 +27,8 @@ import com.sajda.R
 import com.sajda.compass.AndroidDeclination
 import com.sajda.compass.CompassEngine
 import com.sajda.compass.Confidence
-import com.sajda.data.LocationStore
 import com.sajda.data.UserLocation
+import com.sajda.data.LocationStore
 import com.sajda.geo.GeoPoint
 import com.sajda.geo.MagneticHeadingDeg
 import com.sajda.geo.QiblaEngine
@@ -410,10 +409,7 @@ class MainActivity : AppCompatActivity() {
         if (!point.isValid()) return
         provisionalLocation = provisional
         val qibla = QiblaEngine.solve(point)
-        store.save(UserLocation(
-            point.latDeg, point.lonDeg, getString(R.string.source_gps),
-            UserLocation.Source.GPS, fixTimeMillis
-        ))
+        store.save(UserLocation(point.latDeg, point.lonDeg, fixTimeMillis))
         if (!provisional) lastFreshLocationAt = System.currentTimeMillis()
         session = QiblaSession(
             point = point,

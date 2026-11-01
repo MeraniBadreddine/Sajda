@@ -29,7 +29,6 @@
 L’angle affiché est la Qibla calculée. La confiance reflète uniquement les capteurs.
 
 Le métal perturbe le compas. La position reste sur l’appareil.</string>
-    <string name="source_gps">Appareil</string>
     <string name="calibrate_banner">Forme un 8 · loin du métal</string>
     <string name="location_cached">Dernière position connue</string>
     <string name="location_off_pill">Localisation désactivée · Toucher</string>
