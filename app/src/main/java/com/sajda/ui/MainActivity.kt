@@ -1,4 +1,6 @@
 package com.sajda.ui
+
+import com.sajda.BuildConfig
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Intent
@@ -64,14 +66,27 @@ class MainActivity : AppCompatActivity() {
     private var locationRequestGeneration = 0
     private var lastFreshLocationAt = 0L
     private var isResumed = false
+    private var lastUiHeadingAt = 0L
+    private var lastUiHeading = Float.NaN
     private var permissionDeniedPermanently = false
     private val mainExecutor = Executor { command -> mainHandler.post(command) }
 
     private val compass: CompassEngine by lazy {
         CompassEngine(this, AndroidDeclination()) { reading ->
             runOnUiThread {
-                if (isFinishing || isDestroyed) return@runOnUiThread
+                if (isFinishing || isDestroyed || !isResumed) return@runOnUiThread
                 val s = session ?: return@runOnUiThread
+                val h = reading.trueHeadingDeg.toFloat()
+                val now = System.currentTimeMillis()
+                // ~30 Hz cap unless heading moved meaningfully
+                if (!lastUiHeading.isNaN() &&
+                    kotlin.math.abs(h - lastUiHeading) < 0.2f &&
+                    now - lastUiHeadingAt < 33L
+                ) {
+                    return@runOnUiThread
+                }
+                lastUiHeading = h
+                lastUiHeadingAt = now
                 val conf = reading.confidence
                 val heading = TrueHeadingDeg(reading.trueHeadingDeg)
                 session = s.copy(
@@ -446,6 +461,8 @@ class MainActivity : AppCompatActivity() {
 
         if (!compass.isAvailable || compass.registrationFailed) {
             compassView.uncertain = true
+            compassView.alignment = 0f
+            degreeText.setTextColor(ContextCompat.getColor(this, R.color.label_primary))
             deltaText.text = getString(R.string.heading_approximate)
             calibrateBanner.visibility = View.GONE
             confidenceText.text = getString(R.string.conf_calibrate)
@@ -471,6 +488,18 @@ class MainActivity : AppCompatActivity() {
             calibrateBanner.visibility = View.GONE
             val turn = s.turnToQibla()?.value ?: 0.0
             alignHaptic.onTurn(abs(turn), threshold = 2.0)
+            // 0 outside 12°, 1 inside 2° — smooth visual lock
+            val align = when {
+                abs(turn) >= 12.0 -> 0f
+                abs(turn) <= 2.0 -> 1f
+                else -> (1f - ((abs(turn) - 2.0) / 10.0).toFloat()).coerceIn(0f, 1f)
+            }
+            compassView.alignment = align
+            if (abs(turn) < 2.0) {
+                degreeText.setTextColor(ContextCompat.getColor(this, R.color.accent))
+            } else {
+                degreeText.setTextColor(ContextCompat.getColor(this, R.color.label_primary))
+            }
             deltaText.text = when {
                 abs(turn) < 2.0 -> getString(R.string.aligned)
                 else -> getString(
@@ -481,22 +510,31 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        confidenceText.text = when (s.confidence) {
-            Confidence.HIGH -> getString(R.string.conf_high)
-            Confidence.MEDIUM -> getString(R.string.conf_medium)
-            Confidence.LOW -> getString(R.string.conf_low)
-            Confidence.CALIBRATE -> getString(R.string.conf_calibrate)
-        }
-        confidenceText.setTextColor(
-            ContextCompat.getColor(
-                this,
-                when (s.confidence) {
-                    Confidence.HIGH -> R.color.conf_high
-                    Confidence.MEDIUM -> R.color.conf_medium
-                    Confidence.LOW, Confidence.CALIBRATE -> R.color.conf_low
+        when (s.confidence) {
+            Confidence.HIGH -> {
+                // Pro silence: no status when sensors are trustworthy
+                confidenceText.visibility = View.GONE
+            }
+            else -> {
+                confidenceText.visibility = View.VISIBLE
+                confidenceText.text = when (s.confidence) {
+                    Confidence.MEDIUM -> "●  " + getString(R.string.conf_medium)
+                    Confidence.LOW -> "●  " + getString(R.string.conf_low)
+                    Confidence.CALIBRATE -> "●  " + getString(R.string.conf_calibrate)
+                    Confidence.HIGH -> ""
                 }
-            )
-        )
+                confidenceText.setTextColor(
+                    ContextCompat.getColor(
+                        this,
+                        when (s.confidence) {
+                            Confidence.MEDIUM -> R.color.conf_medium
+                            Confidence.LOW, Confidence.CALIBRATE -> R.color.conf_low
+                            Confidence.HIGH -> R.color.conf_high
+                        }
+                    )
+                )
+            }
+        }
 
         val hint = s.interferenceHint
         hintText.text = hint ?: ""
@@ -567,7 +605,7 @@ class MainActivity : AppCompatActivity() {
         locationPill.setText(textRes)
         locationText.setText(textRes)
         locationPill.setBackgroundResource(
-            if (action) R.drawable.bg_glass_pill_action else R.drawable.bg_glass_pill
+            if (action) R.drawable.bg_liquid_glass_action else R.drawable.bg_liquid_glass_pill
         )
         locationPill.setTextColor(
             ContextCompat.getColor(
@@ -632,10 +670,17 @@ class MainActivity : AppCompatActivity() {
 
     private fun showInfo() {
         val view = layoutInflater.inflate(R.layout.dialog_about, null)
+        val versionName = try {
+            packageManager.getPackageInfo(packageName, 0).versionName ?: BuildConfig.VERSION_NAME
+        } catch (_: Exception) {
+            try { BuildConfig.VERSION_NAME } catch (_: Exception) { "1.9.0" }
+        }
+        view.findViewById<TextView>(R.id.aboutVersion).text =
+            getString(R.string.about_version, versionName)
         val dialog = MaterialAlertDialogBuilder(this)
             .setView(view)
             .create()
-        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        LiquidGlass.applyDialogBackdrop(dialog)
         view.findViewById<TextView>(R.id.aboutOk).setOnClickListener { dialog.dismiss() }
         dialog.show()
     }

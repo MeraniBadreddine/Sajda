@@ -3,7 +3,15 @@ plugins {
     id 'org.jetbrains.kotlin.android'
 }
 
+def signingProps = new Properties()
+def signingPropsFile = file("C:/Users/DELL/AndroidSigning/sajda-signing.properties")
+if (!signingPropsFile.exists()) throw new GradleException("Signing properties file not found")
+signingPropsFile.withInputStream { signingProps.load(it) }
+
 android {
+    buildFeatures {
+        buildConfig true
+    }
     namespace 'com.sajda'
     compileSdk 35
 
@@ -11,13 +19,23 @@ android {
         applicationId 'com.sajda'
         minSdk 26
         targetSdk 35
-        versionCode 13
-        versionName '1.6.0'
+        versionCode 19
+        versionName '1.9.0'
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+    }
+
+    signingConfigs {
+        release {
+            storeFile file(signingProps["storeFile"])
+            storePassword signingProps["storePassword"]
+            keyAlias signingProps["keyAlias"]
+            keyPassword signingProps["keyPassword"]
+        }
     }
 
     buildTypes {
         release {
+            signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
